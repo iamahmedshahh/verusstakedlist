@@ -45,7 +45,7 @@ export default {
     sendRequest() {
       const requestConfigGetInfo = {
         method: 'post',
-        url: 'http://135.181.184.116:2777/',
+        url: 'https://rpc.vrsc.komodefi.com',
         headers: { 'Content-Type': 'application/json' },
         data: { method: 'getinfo', params: [], id: 1 }
       };
@@ -56,7 +56,8 @@ export default {
         requestConfigGetInfo.data
       )
         .then((response) => {
-          this.fetchBlockHash(response.data.result.longestchain);
+          const longestChain = response.data.result.longestchain;
+          this.fetchBlockHash(longestChain);
         })
         .catch((error) => {
           console.error(error);
@@ -71,7 +72,7 @@ export default {
       const blockHeight = longestChain;
       const requestConfigGetBlockhash = {
         method: 'post',
-        url: 'http://135.181.184.116:2777/',
+        url: 'https://rpc.vrsc.komodefi.com',
         headers: { 'Content-Type': 'application/json' },
         data: { method: 'getblockhash', params: [blockHeight], id: 1 }
       };
@@ -94,7 +95,7 @@ export default {
       let blocksProcessed = 0;
       const requestConfigGetBlock = {
         method: 'post',
-        url: 'http://135.181.184.116:2777/',
+        url: 'https://rpc.vrsc.komodefi.com',
         headers: { 'Content-Type': 'application/json' },
         data: { method: 'getblock', params: [], id: 1 }
       };
@@ -132,7 +133,7 @@ export default {
     fetchTransactionData(transactionId) {
       const requestConfigGetRawTransaction = {
         method: 'post',
-        url: 'http://135.181.184.116:2777/',
+        url: 'https://rpc.vrsc.komodefi.com',
         headers: { 'Content-Type': 'application/json' },
         data: { method: 'getrawtransaction', params: [], id: 1 }
       };
@@ -147,7 +148,7 @@ export default {
         .then((response) => {
           const requestConfigDecodeRawTransaction = {
             method: 'post',
-            url: 'http://135.181.184.116:2777/',
+            url: 'https://rpc.vrsc.komodefi.com/',
             headers: { 'Content-Type': 'application/json' },
             data: { method: 'decoderawtransaction', params: [], id: 1 }
           };
