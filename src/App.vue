@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div id="verusvueapp">
     <h2> Loading last {{ processBlocks}} Staked Blocks</h2>
     <v-table>
       <thead>
@@ -278,7 +278,7 @@ export default {
   }
 };
 </script>
-<style>
+<style scoped>
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
