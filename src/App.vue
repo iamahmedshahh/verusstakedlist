@@ -7,6 +7,7 @@
           <th>Block Height</th>
           <th>Block Hash</th>
           <th>Validation Type</th>
+          <th>Block Reward</th>
           <th>Coinbase Reward Address</th>
           <th>Staking Amount</th>
           <th>Staking Address</th>
@@ -21,6 +22,7 @@
           </td>
           <td>{{ block.blockHash }}</td>
           <td>{{ block.validationType }}</td>
+          <td>{{ block.blockRewards }}</td>
           <td>{{ block.coinbaseRewardAddress }}</td>
           <td>{{ block.stakingAmount }}</td>
           <td>{{ block.stakingAddress }}</td>
@@ -38,6 +40,7 @@ export default {
     return {
       processBlocks: import.meta.env.VITE_APP_BLOCKS,
       blocks: ref([]),
+      blockRewards : ref([]),
     };
   },
 
@@ -63,6 +66,7 @@ export default {
           console.error(error);
         });
     },
+  
     getExplorerLink(blockHeight) {
       // Replace this URL with the actual explorer URL pattern
       const explorerBaseUrl = 'https://first.sink.cakeshop.dev/api/block/';
@@ -114,14 +118,15 @@ export default {
           .then((response) => {
             const block = response.data.result;
             const validationType = block.validationtype;
-
             if (validationType === 'stake') {
+              
               this.processStakeBlock(block);
-              blocksProcessed++;
+              blocksProcessed++;              
             }
-
+            
             currentBlockHash = block.previousblockhash;
-            processNextBlock.call(this); // Call it with the correct this context
+            processNextBlock.call(this);
+             // Call it with the correct this context
           })
           .catch((error) => {
             console.error('Error fetching block data:', error);
@@ -137,7 +142,7 @@ export default {
         headers: { 'Content-Type': 'application/json' },
         data: { method: 'getrawtransaction', params: [], id: 1 }
       };
-
+      
       requestConfigGetRawTransaction.data.params = [transactionId];
       return this.sendAxiosRequest(
         requestConfigGetRawTransaction.method,
@@ -164,52 +169,55 @@ export default {
         });
     },
     processStakeBlock(block) {
-      const transactions = block.tx;
-      let coinbaseRewardAddress = null;
-      let stakingAmount = null;
+  const transactions = block.tx;
+  let coinbaseRewardAddress = null;
+  let stakingAmount = null;
 
-      transactions.forEach((transactionId) => {
-        this.fetchTransactionData(transactionId)
-          .then((transaction) => {
-            if (!coinbaseRewardAddress) {
-              const coinbaseReward = this.processTransactionCoinbase(transaction);
-              if (coinbaseReward) {
-                coinbaseRewardAddress = coinbaseReward.address;
-              }
-            }
-          })
-          .catch((error) => {
-            console.error('Error fetching transaction data:', error);
-          });
+  transactions.forEach((transactionId) => {
+    this.fetchTransactionData(transactionId)
+      .then((transaction) => {
+        if (!coinbaseRewardAddress) {
+          const coinbaseReward = this.processTransactionCoinbase(transaction);
+          if (coinbaseReward) {
+            coinbaseRewardAddress = coinbaseReward.address;
+          }
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching transaction data:', error);
       });
+  });
 
-      transactions.forEach((transactionId) => {
-        this.fetchTransactionData(transactionId)
-          .then((transaction) => {
-            if (coinbaseRewardAddress) {
-              const stakingReward = this.processTransactionStaking(
-                transaction,
-                coinbaseRewardAddress
-              );
-              if (stakingReward) {
-                stakingAmount = stakingReward.amount;
-                const newBlock = {
-                  blockHeight: block.height,
-                  blockHash: block.hash,
-                  validationType: block.validationtype,
-                  coinbaseRewardAddress: coinbaseRewardAddress,
-                  stakingAmount: stakingAmount,
-                  stakingAddress: stakingReward.address
-                };
-                this.blocks.push(newBlock);
-              }
-            }
-          })
-          .catch((error) => {
-            console.error('Error fetching transaction data:', error);
-          });
+  transactions.forEach((transactionId) => {
+    this.fetchTransactionData(transactionId)
+      .then((transaction) => {
+        if (coinbaseRewardAddress) {
+          const stakingReward = this.processTransactionStaking(
+            transaction,
+            coinbaseRewardAddress
+          );
+          if (stakingReward) {
+            stakingAmount = stakingReward.amount;
+            const blockReward = block.reward;
+            const newBlock = {
+              blockHeight: block.height,
+              blockHash: block.hash,
+              validationType: block.validationtype,
+              coinbaseRewardAddress: coinbaseRewardAddress,
+              stakingAmount: stakingAmount,
+              stakingAddress: stakingReward.address,
+              blockRewards: blockReward
+            };
+            this.blocks.push(newBlock);
+            console.log(newBlock);
+          }
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching transaction data:', error);
       });
-    },
+  });
+},
     processTransactionCoinbase(transaction) {
       const vin = transaction.vin;
       const vout = transaction.vout;
@@ -271,6 +279,7 @@ export default {
         data: data
       });
     }
+    
   },
   mounted()
   {
@@ -321,9 +330,10 @@ body {
   min-height: 100vh;
 }
 
-h1 {
+h2 {
   font-size: 3.2em;
   line-height: 1.1;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
 }
 
 button {
